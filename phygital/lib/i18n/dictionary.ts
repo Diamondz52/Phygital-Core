@@ -1,0 +1,2 @@
+export type Language="ru"|"en";
+export const dictionary={ru:{home:"Главная",tournaments:"Турниры",teams:"Команды",rules:"Правила",faq:"FAQ",contacts:"Контакты",login:"Войти",profile:"Личный кабинет",admin:"Админ-панель",logout:"Выйти",more:"БОЛЬШЕ, ЧЕМ ИГРА ///"},en:{home:"Home",tournaments:"Tournaments",teams:"Teams",rules:"Rules",faq:"FAQ",contacts:"Contacts",login:"Sign in",profile:"Profile",admin:"Admin",logout:"Sign out",more:"MORE THAN A GAME ///"}} as const;

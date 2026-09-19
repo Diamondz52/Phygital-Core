@@ -1,0 +1,1 @@
+import{SiteHeader}from"@/components/layout/SiteChrome";import{AdminLayout}from"@/components/layout/AdminChrome";export default function Layout({children}:{children:React.ReactNode}){return <><SiteHeader/><AdminLayout>{children}</AdminLayout></>}
