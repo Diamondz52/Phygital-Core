@@ -1,5 +1,7 @@
 # Phygital Core
 
+Текущая версия: v13. Исправления заголовков и новая серия прозрачных объектов описаны в [docs/ITERATION-13.md](docs/ITERATION-13.md). Предыдущие изменения: [docs/ITERATION-12.md](docs/ITERATION-12.md).
+
 Полностью адаптивный frontend платформы фиджитал-турниров. Проект работает без backend: аккаунты, сессия, профиль и административные изменения сохраняются локально в браузере. Стек сохранён — React 19, TypeScript 5.9, Next.js App Router API через Vinext, Vite 8 и Cloudflare Workers.
 
 ## Запуск

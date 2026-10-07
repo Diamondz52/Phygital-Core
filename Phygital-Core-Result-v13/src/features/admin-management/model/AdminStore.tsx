@@ -73,6 +73,12 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
     if (signedInUser?.role !== "ADMIN") throw new Error("Недостаточно прав для выполнения действия");
     mutate(previous => withLog(change(previous), fullName(signedInUser), action, entityType, entityId, details));
   };
+  const commitTeam = async (teamId: string, action: string, details: string, change: (previous: AdminState) => AdminState) => {
+    const team = state.teams.find(item => item.id === teamId);
+    if (!team) throw new Error("Команда не найдена");
+    if (!signedInUser || (signedInUser.role !== "ADMIN" && !team.members.some(member => member.id === signedInUser.id && member.captain))) throw new Error("Управлять командой может только капитан или администратор");
+    mutate(previous => withLog(change(previous), fullName(signedInUser), action, "Команда", teamId, details));
+  };
 
   const actions = useMemo<AdminActions>(() => ({
     state,
@@ -125,7 +131,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         return withLog({ ...previous, teams, invitations, notifications }, fullName(signedInUser), accepted ? "Принятие" : "Отклонение", "Приглашение", invitationId, `${accepted ? "Принято" : "Отклонено"} приглашение в «${team.name}»`);
       });
     },
-    cancelInvitation: async invitationId => { if (!signedInUser) throw new Error("Требуется авторизация"); const invitation = state.invitations.find(item => item.id === invitationId); if (!invitation || invitation.senderId !== signedInUser.id || invitation.status !== "pending") throw new Error("Приглашение нельзя отменить"); mutate(previous => withLog({ ...previous, invitations: previous.invitations.map(item => item.id === invitationId ? { ...item, status: "cancelled", respondedAt: new Date().toISOString() } : item) }, fullName(signedInUser), "Отмена", "Приглашение", invitationId, "Приглашение отменено капитаном")) },
+    cancelInvitation: async invitationId => { if (!signedInUser) throw new Error("Требуется авторизация"); const invitation = state.invitations.find(item => item.id === invitationId); const team = state.teams.find(item => item.id === invitation?.teamId); if (!invitation || invitation.status !== "pending" || !team?.members.some(member => member.id === signedInUser.id && member.captain)) throw new Error("Приглашение может отменить только текущий капитан"); mutate(previous => withLog({ ...previous, invitations: previous.invitations.map(item => item.id === invitationId ? { ...item, status: "cancelled", respondedAt: new Date().toISOString() } : item), notifications: previous.notifications.map(item => item.invitationId === invitationId ? { ...item, read: true } : item) }, fullName(signedInUser), "Отмена", "Приглашение", invitationId, "Приглашение отменено капитаном")) },
     markNotificationsRead: () => { if (!signedInUser) return; mutate(previous => ({ ...previous, notifications: previous.notifications.map(item => item.userId === signedInUser.id ? { ...item, read: true } : item) })) },
     submitTournamentApplication: async (teamId, tournamentId, additionalInfo) => {
       if (!signedInUser) throw new Error("Требуется авторизация");
@@ -139,9 +145,18 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
     },
     updateTeam: (id, patch) => commitAdmin("Изменение", "Команда", id, "Изменено название команды", previous => ({ ...previous, teams: previous.teams.map(team => team.id === id ? { ...team, ...patch, updatedAt: new Date().toISOString() } : team) })),
     addTeamMember: (teamId, userId) => { if (userId === signedInUser?.id) return Promise.reject(new Error("Администратор не может добавить себя в команду")); const user = state.users.find(item => item.id === userId), team = state.teams.find(item => item.id === teamId); if (!user || !team) return Promise.reject(new Error("Пользователь или команда не найдены")); if (team.members.some(member => member.id === userId)) return Promise.reject(new Error("Пользователь уже состоит в команде")); return commitAdmin("Изменение", "Команда", teamId, `Добавлен участник ${fullName(user)}`, previous => ({ ...previous, teams: previous.teams.map(item => item.id === teamId ? { ...item, updatedAt: new Date().toISOString(), members: [...item.members, { id: user.id, name: fullName(user) }] } : item) })) },
-    removeTeamMember: (teamId, userId) => commitAdmin("Изменение", "Команда", teamId, "Удалён участник команды", previous => ({ ...previous, teams: previous.teams.map(team => team.id === teamId ? { ...team, updatedAt: new Date().toISOString(), members: team.members.filter(member => member.id !== userId) } : team) })),
-    assignCaptain: (teamId, userId) => commitAdmin("Изменение", "Команда", teamId, "Назначен новый капитан", previous => ({ ...previous, teams: previous.teams.map(team => team.id === teamId ? { ...team, updatedAt: new Date().toISOString(), members: team.members.map(member => ({ ...member, captain: member.id === userId })) } : team) })),
-    deleteTeam: id => commitAdmin("Удаление", "Команда", id, "Команда удалена", previous => ({ ...previous, teams: previous.teams.filter(team => team.id !== id) })),
+    removeTeamMember: (teamId, userId) => {
+      const member = state.teams.find(team => team.id === teamId)?.members.find(item => item.id === userId);
+      if (!member) return Promise.reject(new Error("Участник не найден"));
+      if (member.captain) return Promise.reject(new Error("Сначала назначьте другого капитана"));
+      return commitTeam(teamId, "Изменение", `Удалён участник ${member.name}`, previous => ({ ...previous, teams: previous.teams.map(team => team.id === teamId ? { ...team, updatedAt: new Date().toISOString(), members: team.members.filter(item => item.id !== userId) } : team) }));
+    },
+    assignCaptain: (teamId, userId) => {
+      const member = state.teams.find(team => team.id === teamId)?.members.find(item => item.id === userId);
+      if (!member) return Promise.reject(new Error("Капитан должен быть участником команды"));
+      return commitTeam(teamId, "Изменение", `Капитаном назначен ${member.name}`, previous => ({ ...previous, teams: previous.teams.map(team => team.id === teamId ? { ...team, updatedAt: new Date().toISOString(), members: team.members.map(item => ({ ...item, captain: item.id === userId })) } : team) }));
+    },
+    deleteTeam: id => commitTeam(id, "Удаление", "Команда удалена", previous => ({ ...previous, teams: previous.teams.filter(team => team.id !== id), invitations: previous.invitations.map(item => item.teamId === id && item.status === "pending" ? { ...item, status: "cancelled", respondedAt: new Date().toISOString() } : item), notifications: previous.notifications.map(item => previous.invitations.some(invite => invite.teamId === id && invite.id === item.invitationId) ? { ...item, read: true } : item), tournamentApplications: previous.tournamentApplications.filter(item => item.teamId !== id) })),
     updateTeamApplication: (id, status) => commitAdmin(status === "APPROVED" ? "Одобрение" : "Отклонение", "Заявка на команду", id, `Статус заявки изменён на ${status}`, previous => ({ ...previous, teamApplications: previous.teamApplications.map(application => application.id === id ? { ...application, status } : application) })),
     createTournament: draft => { if (!draft.name.trim() || !draft.shortDescription.trim() || !draft.city.trim() || !draft.startAt || !draft.endAt) return Promise.reject(new Error("Заполните обязательные поля")); if (new Date(draft.endAt) <= new Date(draft.startAt)) return Promise.reject(new Error("Окончание должно быть позднее начала")); const id = `${draft.name.toLowerCase().replace(/[^a-zа-я0-9]+/gi, "-")}-${Date.now()}`; return commitAdmin("Создание", "Турнир", id, `Создан турнир «${draft.name}»`, previous => ({ ...previous, tournaments: [...previous.tournaments, { id, publicNumber: "", name: draft.name.trim(), discipline: "", format: "", city: draft.city.trim(), venue: "", shortDescription: draft.shortDescription.trim(), description: draft.fullDescription?.trim() || draft.shortDescription.trim(), startAt: draft.startAt, endAt: draft.endAt ?? "", registrationEndsAt: draft.startAt, rules: [], imageName: draft.imageName }] })) },
     updateTournament: (id, patch) => commitAdmin("Изменение", "Турнир", id, "Обновлены данные турнира", previous => ({ ...previous, tournaments: previous.tournaments.map(tournament => tournament.id === id ? { ...tournament, ...patch } : tournament) })),

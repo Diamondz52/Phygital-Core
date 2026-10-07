@@ -1,6 +1,6 @@
 "use client";
-import { useState, type FormEvent, type ReactNode } from "react";
-import { ArrowRight, CalendarCheck, ChevronDown, Clock3, ExternalLink, Gamepad2, Mail, MapPin, MessageSquareText, Phone, RadioTower, Scale, Send, ShieldCheck, Trophy, UsersRound } from "lucide-react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, CalendarCheck, ChevronDown, Clock3, ExternalLink, Gamepad2, Mail, MapPin, MessageSquareText, Phone, RadioTower, Scale, Send, ShieldCheck, Trophy, UsersRound } from "lucide-react";
 import { CONTACTS } from "@/shared/config";
 import { DemoForm, Field, GlowButton, Modal, PageHeader, Reveal, TextareaField } from "@/shared/ui";
 import { useApp } from "@/shared/providers";
@@ -21,7 +21,29 @@ const questions = [
   ["Как определяется победитель?", "По сумме результатов реального и цифрового этапов в соответствии с правилами конкретного турнира."],
 ];
 
-export function RulesPage(){const[open,setOpen]=useState<number|null>(0);return <><PageHeader eyebrow="КОДЕКС УЧАСТНИКА" title="Правила" description="Всё важное перед участием в турнире." visual={<Scale/>} variant="rules"/><section className="content-section rules-accordion">{rules.map(({icon:Icon,title,text},i)=><Reveal key={title} delay={i*35}><article className={`glass ${open===i?"open":""}`}><button aria-expanded={open===i} onClick={()=>setOpen(open===i?null:i)}><span>0{i+1}</span><Icon/><b>{title}</b><ChevronDown/></button><div className="accordion-body"><p>{text}</p></div></article></Reveal>)}</section><Reveal><section className="content-section rules-banner glass"><Trophy/><div><p className="eyebrow">ГЛАВНЫЙ ПРИНЦИП</p><h2>Победа ценна, когда она честная</h2><p>Сомневаетесь в трактовке пункта? Задайте вопрос до начала матча.</p></div><a className="secondary" href="/faq">Перейти в FAQ <ArrowRight/></a></section></Reveal></>}
+function RuleText({text}:{text:string}){
+  const sentences=text.match(/[^.!?]+[.!?]+(?:\s|$)/g)??[text];
+  const paragraphs:string[]=[];for(let index=0;index<sentences.length;index+=2)paragraphs.push(sentences.slice(index,index+2).join("").trim());
+  return <div className="rule-text">{paragraphs.map((paragraph,index)=><p key={index}>{paragraph}</p>)}</div>;
+}
+export function RulesPage(){
+  const[selected,setSelected]=useState(0),[mobileOpen,setMobileOpen]=useState<number|null>(0),prefix=useId();
+  const active=rules[selected],Icon=active.icon;
+  const select=(index:number)=>{setSelected(index);setMobileOpen(index)};
+  return <><PageHeader eyebrow="Кодекс участника" title="Правила" description="Всё важное перед выходом на арену." visual={<ShieldCheck/>} variant="rules"/>
+    <section className="content-section rules-workspace">
+      <div className="rules-desktop">
+        <nav className="rules-navigation" aria-label="Разделы правил"><p className="eyebrow">ШЕСТЬ ПРИНЦИПОВ ИГРЫ</p><div role="tablist" aria-orientation="vertical" aria-label="Правила турнира">{rules.map((rule,index)=><button key={rule.title} id={`${prefix}-tab-${index}`} role="tab" aria-selected={selected===index} aria-controls={`${prefix}-panel`} tabIndex={selected===index?0:-1} className={selected===index?"active":""} onClick={()=>select(index)} onKeyDown={event=>{let next:number|undefined;if(event.key==="ArrowDown")next=(index+1)%rules.length;if(event.key==="ArrowUp")next=(index+rules.length-1)%rules.length;if(event.key==="Home")next=0;if(event.key==="End")next=rules.length-1;if(next!==undefined){event.preventDefault();select(next);document.getElementById(`${prefix}-tab-${next}`)?.focus({preventScroll:true})}}}><span>0{index+1}</span><b>{rule.title}</b><ArrowRight/></button>)}</div></nav>
+        <article className="rule-panel" id={`${prefix}-panel`} role="tabpanel" aria-labelledby={`${prefix}-tab-${selected}`} tabIndex={0}>
+          <div className="rule-panel-meta"><span>0{selected+1} / 06</span><span className="rule-progress" aria-hidden="true">{rules.map((_,index)=><i key={index} className={index<=selected?"complete":""}/>)}</span></div>
+          <div className="rule-panel-content" key={selected}><span className="rule-panel-icon"><Icon/></span><h2>{active.title}</h2><RuleText text={active.text}/></div>
+          <div className="rule-pagination"><button className="secondary" disabled={selected===0} onClick={()=>select(selected-1)}><ArrowLeft/>Назад</button><button className="secondary" disabled={selected===rules.length-1} onClick={()=>select(selected+1)}>Далее<ArrowRight/></button></div>
+          <ShieldCheck className="rule-panel-watermark" aria-hidden="true"/>
+        </article>
+      </div>
+      <div className="rules-mobile">{rules.map((rule,index)=><article key={rule.title} className={mobileOpen===index?"active":""}><button aria-expanded={mobileOpen===index} aria-controls={`${prefix}-mobile-${index}`} onClick={()=>{setMobileOpen(mobileOpen===index?null:index);setSelected(index)}}><span>0{index+1}</span><b>{rule.title}</b><ChevronDown/></button><div id={`${prefix}-mobile-${index}`} hidden={mobileOpen!==index}><RuleText text={rule.text}/></div></article>)}</div>
+    </section><Reveal><section className="content-section rules-banner glass"><Trophy/><div><p className="eyebrow">ГЛАВНЫЙ ПРИНЦИП</p><h2>Победа ценна, когда она честная</h2><p>Сомневаетесь в трактовке пункта? Задайте вопрос до начала матча.</p></div><a className="secondary" href="/faq">Перейти в FAQ <ArrowRight/></a></section></Reveal></>;
+}
 
 export function FaqPage(){const[open,setOpen]=useState<number|null>(null),[ask,setAsk]=useState(false),{notify}=useApp();return <><PageHeader eyebrow="ЦЕНТР ПОМОЩИ" title="FAQ" description="Ответы на основные вопросы." visual={<MessageSquareText/>} variant="faq"/><section className="content-section faq-shell faq-compact"><aside className="faq-aside glass"><MessageSquareText/><h2>Сформулируйте вопрос — мы разберёмся</h2><p>Ответ придёт на указанный email.</p><GlowButton onClick={()=>setAsk(true)}>Задать свой вопрос <Send/></GlowButton></aside><div className="faq-list faq-modern">{questions.map(([q,a],i)=><article className={`glass ${open===i?"open":""}`} key={q}><button aria-expanded={open===i} onClick={()=>setOpen(open===i?null:i)}><span>0{i+1}</span><b>{q}</b><ChevronDown/></button><div className="faq-answer"><p>{a}</p></div></article>)}</div></section>{ask&&<Modal title="Задать вопрос" subtitle="Мы ответим на указанный email." onClose={()=>setAsk(false)}><DemoForm onSuccess={()=>{setAsk(false);notify("Вопрос отправлен")}}><Field label="Ваше имя" required/><Field label="Email" type="email" required/><label><span>Тема <b className="required">*</b></span><select required defaultValue=""><option value="" disabled>Выберите тему</option><option>Участие в турнире</option><option>Регистрация команды</option><option>Правила турнира</option><option>Предложение сотрудничества</option><option>Технические вопросы</option><option>Другое</option></select></label><TextareaField label="Ваш вопрос" required/></DemoForm></Modal>}</>}
 

@@ -1,13 +1,32 @@
 "use client";
-import{useEffect,useRef,useState,useSyncExternalStore,type ButtonHTMLAttributes,type FormEvent,type InputHTMLAttributes,type ReactNode}from"react";import{createPortal}from"react-dom";import{Eye,EyeOff,X}from"lucide-react";
+import{useEffect,useEffectEvent,useId,useRef,useState,useSyncExternalStore,type ButtonHTMLAttributes,type FormEvent,type InputHTMLAttributes,type ReactNode}from"react";import{createPortal}from"react-dom";import{Eye,EyeOff,X}from"lucide-react";
 export function GlowButton({children,...props}:ButtonHTMLAttributes<HTMLButtonElement>){return <button className="primary" {...props}>{children}</button>}
 export function SecondaryButton({children,...props}:ButtonHTMLAttributes<HTMLButtonElement>){return <button className="secondary" {...props}>{children}</button>}
-type DecorationVariant="generic"|"tournaments"|"teams"|"rules"|"faq"|"contacts"|"profile";
-export function PageDecoration({visual,variant="generic"}:{visual?:ReactNode;variant?:DecorationVariant}){return <div className={`page-decoration decoration-${variant}`} aria-hidden="true"><span className="decoration-orbit"><i/><i/></span><span className="decoration-icon">{visual??"///"}</span><span className="decoration-line"/><span className="decoration-dot"/></div>}
-export function PageHeader({eyebrow,title,description,visual,variant="generic"}:{eyebrow:string;title:string;description:string;visual?:ReactNode;variant?:DecorationVariant}){const inferred:DecorationVariant=variant!=="generic"?variant:title==="Турниры"?"tournaments":title==="Команды"?"teams":title==="Правила"?"rules":title==="FAQ"?"faq":title==="Контакты"?"contacts":title==="Личный кабинет"?"profile":"generic";return <section className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></div><PageDecoration visual={visual} variant={inferred}/></section>}
-export const PageHero=PageHeader;
+export { PageDecoration, PageHeader, PageHero } from "./PageHeader";
 export function Badge({children,tone="purple"}:{children:ReactNode;tone?:"purple"|"green"|"blue"|"red"}){return <span className={`badge ${tone}`}>{children}</span>}
-export function Modal({title,subtitle,children,onClose,busy=false}:{title:string;subtitle?:string;children:ReactNode;onClose:()=>void;busy?:boolean}){const ref=useRef<HTMLDivElement>(null),mounted=useSyncExternalStore(()=>()=>{},()=>true,()=>false);useEffect(()=>{if(!mounted)return;const previous=document.activeElement as HTMLElement|null,body=document.body,overflow=body.style.overflow,padding=body.style.paddingRight,scrollbar=window.innerWidth-document.documentElement.clientWidth;body.style.overflow="hidden";if(scrollbar>0)body.style.paddingRight=`${scrollbar}px`;const key=(e:KeyboardEvent)=>{if(e.key==="Escape"&&!busy)onClose();if(e.key==="Tab"&&ref.current){const focusable=[...ref.current.querySelectorAll<HTMLElement>("button,input,select,textarea,a[href]")].filter(x=>!x.hasAttribute("disabled"));if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1)!;if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};document.addEventListener("keydown",key);requestAnimationFrame(()=>ref.current?.querySelector<HTMLElement>("input,button")?.focus());return()=>{document.removeEventListener("keydown",key);body.style.overflow=overflow;body.style.paddingRight=padding;previous?.focus()}},[onClose,busy,mounted]);if(!mounted)return null;return createPortal(<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)onClose()}}><div className="modal glass" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-busy={busy} ref={ref}><button className="close" onClick={onClose} disabled={busy} aria-label="Закрыть"><X/></button><h2 id="modal-title">{title}</h2>{subtitle&&<p>{subtitle}</p>}{children}</div></div>,document.body)}
+export function Modal({title,subtitle,children,onClose,busy=false}:{title:string;subtitle?:string;children:ReactNode;onClose:()=>void;busy?:boolean}){
+  const ref=useRef<HTMLDivElement>(null),titleId=useId(),mounted=useSyncExternalStore(()=>()=>{},()=>true,()=>false);
+  const dismiss=useEffectEvent(()=>{if(!busy)onClose()});
+  useEffect(()=>{
+    if(!mounted)return;
+    const previous=document.activeElement as HTMLElement|null,body=document.body,overflow=body.style.overflow;
+    body.style.overflow="hidden";
+    const key=(event:KeyboardEvent)=>{
+      if(event.key==="Escape")dismiss();
+      if(event.key==="Tab"&&ref.current){
+        const focusable=[...ref.current.querySelectorAll<HTMLElement>("button,input,select,textarea,a[href]")].filter(element=>!element.hasAttribute("disabled")&&element.getClientRects().length);
+        const first=focusable[0],last=focusable.at(-1);if(!first||!last)return;
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus({preventScroll:true})}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus({preventScroll:true})}
+      }
+    };
+    document.addEventListener("keydown",key);
+    const frame=requestAnimationFrame(()=>ref.current?.querySelector<HTMLElement>("input,button")?.focus({preventScroll:true}));
+    return()=>{cancelAnimationFrame(frame);document.removeEventListener("keydown",key);body.style.overflow=overflow;if(previous?.isConnected)previous.focus({preventScroll:true})};
+  },[mounted]);
+  if(!mounted)return null;
+  return createPortal(<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)onClose()}}><div className="modal glass" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-busy={busy} ref={ref}><button className="close" onClick={onClose} disabled={busy} aria-label="Закрыть"><X/></button><h2 id={titleId}>{title}</h2>{subtitle&&<p>{subtitle}</p>}{children}</div></div>,document.body);
+}
 export function Field({label,type="text",required=false,placeholder}:{label:string;type?:string;required?:boolean;placeholder?:string}){return <label><span>{label}{required&&<b className="required"> *</b>}</span><input type={type} required={required} placeholder={placeholder}/></label>}
 type PasswordFieldProps=Omit<InputHTMLAttributes<HTMLInputElement>,"type">&{label:string};
 export function PasswordField({label,required=false,...inputProps}:PasswordFieldProps){const[visible,setVisible]=useState(false);return <label><span>{label}{required&&<b className="required"> *</b>}</span><span className="password-control"><input {...inputProps} type={visible?"text":"password"} required={required}/><button type="button" onClick={()=>setVisible(!visible)} aria-label={visible?"Скрыть пароль":"Показать пароль"}>{visible?<EyeOff/>:<Eye/>}</button></span></label>}
