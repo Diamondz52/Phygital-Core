@@ -1,1 +1,0 @@
-import{AdminGate}from"@/features/auth";import{SiteHeader,AdminLayout}from"@/widgets";export default function Layout({children}:{children:React.ReactNode}){return <><SiteHeader/><AdminGate><AdminLayout>{children}</AdminLayout></AdminGate></>}

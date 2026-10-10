@@ -1,0 +1,219 @@
+/* One interaction language; default branding and existing component geometry stay intact. */
+:is(.pc-button, .primary, .secondary, .danger) {
+  position: relative;
+  isolation: isolate;
+  transition:
+    color 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.24s ease;
+}
+:is(.pc-button, .primary, .secondary, .danger)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+:is(.primary, .secondary):hover:not(:disabled) {
+  color: #140b20;
+  border-color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px #d88eff30;
+}
+:is(.primary, .secondary):hover:not(:disabled)::before {
+  opacity: 1;
+}
+.danger:hover:not(:disabled) {
+  color: #fff;
+  border-color: #ef416d;
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px #ef416d30;
+}
+.danger::before {
+  background: #b91844;
+}
+.danger:hover:not(:disabled)::before {
+  opacity: 1;
+}
+.pc-button.ghost {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.pc-button.ghost::before {
+  background: #bc6ff51f;
+}
+.pc-button.ghost:hover:not(:disabled)::before {
+  opacity: 1;
+}
+.pc-button.ghost:hover:not(:disabled) {
+  color: #fff;
+}
+:is(.pc-button, .primary, .secondary, .danger):active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.94);
+}
+:is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #edb4ff;
+  outline-offset: 4px;
+}
+:is(.pc-button, .primary, .secondary, .danger):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.pc-button[aria-busy="true"] {
+  cursor: progress;
+}
+.button-spinner {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  animation: spin 0.8s linear infinite;
+}
+:is(button, a) {
+  -webkit-tap-highlight-color: #b943f63d;
+}
+button:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+button:not(:disabled):active {
+  filter: brightness(0.94);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:is(
+  .team-tile,
+  .profile-teams > button,
+  .admin-tabs a,
+  .admin-sidebar a,
+  .main-nav a,
+  .tournament-extra a
+) {
+  transition:
+    color 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+:is(
+  .team-tile,
+  .profile-teams > button,
+  .admin-tabs a,
+  .admin-sidebar a,
+  .tournament-extra a
+):hover {
+  color: #fff;
+  border-color: #d795ff;
+}
+:is(
+  .team-tile,
+  .profile-teams > button,
+  .admin-tabs a,
+  .admin-sidebar a,
+  .main-nav a,
+  .tournament-extra a
+):active {
+  filter: brightness(0.94);
+}
+:is(
+  .text-button,
+  .icon-button,
+  .notification-trigger,
+  .profile-nav button,
+  .periods button,
+  .pagination button,
+  .faq-list article > button,
+  .rules-mobile article > button,
+  .search-results button,
+  .user-menu button
+) {
+  transition:
+    color 0.24s ease,
+    background-color 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+:is(
+    .text-button,
+    .icon-button,
+    .notification-trigger,
+    .profile-nav button,
+    .periods button,
+    .pagination button,
+    .faq-list article > button,
+    .rules-mobile article > button,
+    .search-results button,
+    .user-menu button
+  ):hover:not(:disabled) {
+  background-color: #a363d125;
+  color: #fff;
+  border-color: #d795ff;
+}
+:is(
+    .text-button,
+    .icon-button,
+    .notification-trigger,
+    .profile-nav button,
+    .periods button,
+    .pagination button,
+    .faq-list article > button,
+    .rules-mobile article > button,
+    .search-results button,
+    .user-menu button
+  ):active:not(:disabled) {
+  filter: brightness(0.88);
+}
+.danger-icon:hover:not(:disabled),
+.team-delete:hover:not(:disabled) {
+  background-color: #b91844;
+  color: #fff;
+}
+:is(.footer-navigation a, .footer-social > a) {
+  transition:
+    color 0.22s ease,
+    text-shadow 0.22s ease;
+}
+:is(.footer-navigation a, .footer-social > a):hover {
+  color: #fff;
+  text-shadow: 0 0 10px #d889ff55;
+  background: none;
+}
+.footer-navigation a:active {
+  color: #edb4ff;
+}
+.team-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.team-edit-actions > button {
+  flex: 1;
+}
+.team-rename {
+  margin-top: 22px;
+}
+.team-rename .form-actions {
+  margin-top: 15px;
+}
+@media (max-width: 650px) {
+  .team-edit-actions > button {
+    flex-basis: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(button, a),
+  :is(.pc-button, .primary, .secondary, .danger)::before {
+    transition: none !important;
+  }
+  .button-spinner {
+    animation: none;
+  }
+}

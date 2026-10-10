@@ -1,0 +1,63 @@
+import { type User } from "./types";
+
+export const currentUser: User = {
+  id: "u1",
+  firstName: "Анна",
+  lastName: "Сонина",
+  email: "admin@phygital.local",
+  phone: "+7 912 345-67-89",
+  telegram: "@annasonina",
+  birthDate: "2000-05-14",
+  role: "ADMIN",
+  bio: "Администратор платформы и организатор турниров.",
+  createdAt: "2026-09-03T09:20:00+05:00",
+};
+
+export const users: User[] = [
+  currentUser,
+  {
+    id: "u2",
+    firstName: "Иван",
+    lastName: "Петров",
+    email: "user@phygital.local",
+    phone: "+7 912 111-22-33",
+    telegram: "@ivanpetrov",
+    birthDate: "2001-08-22",
+    role: "USER",
+    bio: "Капитан New Dimension.",
+    createdAt: "2026-09-25T10:00:00+05:00",
+  },
+  {
+    id: "u3",
+    firstName: "Мария",
+    lastName: "Иванова",
+    email: "maria@mail.ru",
+    phone: "+7 900 123-45-67",
+    telegram: "@maria_iv",
+    birthDate: "2001-11-10",
+    role: "USER",
+    createdAt: "2026-09-29T15:30:00+05:00",
+  },
+  {
+    id: "u4",
+    firstName: "Алексей",
+    lastName: "Смирнов",
+    email: "alex@mail.ru",
+    phone: "+7 909 111-22-33",
+    telegram: "@smirnov_a",
+    birthDate: "2000-03-22",
+    role: "USER",
+    createdAt: "2026-10-01T11:10:00+05:00",
+  },
+  {
+    id: "u5",
+    firstName: "Никита",
+    lastName: "Соколов",
+    email: "member@phygital.local",
+    phone: "+7 904 555-22-11",
+    telegram: "",
+    birthDate: "",
+    role: "USER",
+    createdAt: "2026-10-02T08:45:00+05:00",
+  },
+];

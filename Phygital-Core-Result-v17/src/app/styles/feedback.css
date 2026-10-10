@@ -1,0 +1,80 @@
+.feedback-table {
+  overflow: auto;
+  margin-top: 24px;
+}
+.feedback-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+.feedback-table th,
+.feedback-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid #a15cff26;
+  font-size: 14px;
+  vertical-align: top;
+}
+.feedback-table th {
+  color: #b4a7c8;
+  font-weight: 500;
+}
+.feedback-preview {
+  max-width: 230px;
+  overflow-wrap: anywhere;
+}
+.feedback-table .text-button {
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.feedback-unread {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #d144ff;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 10px #c431ff;
+}
+.feedback-count {
+  margin-left: auto;
+  background: #822bdd;
+  border-radius: 20px;
+  min-width: 22px;
+  padding: 2px 6px;
+  text-align: center;
+  font-size: 12px;
+}
+.feedback-details dt {
+  color: #b4a7c8;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.feedback-details dd {
+  margin: 5px 0 16px;
+  overflow-wrap: anywhere;
+}
+.feedback-message {
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow: auto;
+}
+.feedback-form .form-actions button {
+  width: 100%;
+}
+.storage-error {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 200;
+  background: #38142e;
+  border: 1px solid #ed7299;
+  border-radius: 12px;
+  padding: 14px;
+  color: #fff;
+}
